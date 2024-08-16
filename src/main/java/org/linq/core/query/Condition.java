@@ -62,12 +62,12 @@ abstract class Condition implements QueryPart {
             return new LeftRightConditions(PlainCondition.ofSimpleBlock(left), PlainCondition.ofSimpleBlock(right));
         }
 
-        private record LeftRightConditions(Condition left, Condition right) {
-        }
-
         private enum Operator {
             AND,
             OR
+        }
+
+        private record LeftRightConditions(Condition left, Condition right) {
         }
 
         private static class AndCondition extends CompositeCondition {
@@ -97,16 +97,16 @@ abstract class Condition implements QueryPart {
 
     private static abstract class PlainCondition extends Condition {
 
-        private boolean negated = false;
-
         protected final Operand field;
+        private boolean negated = false;
 
         private PlainCondition(Op op) {
             this.field = Operand.of(((Op.Result) op.operands().getFirst()).op(), capturedValues.get());
         }
 
-        public void negate() {
-            negated = true;
+        private static Condition ofSimpleBlock(Block block) {
+            var op = ((Op.Result) block.terminatingOp().operands().getFirst()).op();
+            return PlainCondition.newPlainOp(op);
         }
 
         private static PlainCondition newPlainOp(Op op) {
@@ -131,9 +131,8 @@ abstract class Condition implements QueryPart {
             return painOp;
         }
 
-        private static Condition ofSimpleBlock(Block block) {
-            var op = ((Op.Result) block.terminatingOp().operands().getFirst()).op();
-            return PlainCondition.newPlainOp(op);
+        public void negate() {
+            negated = true;
         }
 
         @Override
@@ -160,6 +159,7 @@ abstract class Condition implements QueryPart {
                 this.value = switch (param) {
                     case CoreOp.ConstantOp constant -> constant.value().toString();
                     case CoreOp.VarAccessOp varAccess -> Values.valueOf(varAccess, capturedValues.get());
+                    case CoreOp.FieldAccessOp fieldAccess -> Values.valueOf(fieldAccess, capturedValues.get());
                     default -> throw new IllegalArgumentException("Unsupported string condition");
                 };
             }
@@ -193,10 +193,6 @@ abstract class Condition implements QueryPart {
                 this.postProcess = postProcess;
             }
 
-            public String sql() {
-                return sql;
-            }
-
             public static SqlOp ofInvokeDescriptor(MethodRef invokeDescriptor) {
                 return switch (invokeDescriptor.name()) {
                     case "equals", "equalsIgnoreCase" -> EQUALS;
@@ -210,12 +206,16 @@ abstract class Condition implements QueryPart {
                 };
             }
 
-            public String postProcess(String value) {
-                return postProcess.apply(value);
-            }
-
             private static String processRegex(String value) {
                 return value.replace(".*", "%");
+            }
+
+            public String sql() {
+                return sql;
+            }
+
+            public String postProcess(String value) {
+                return postProcess.apply(value);
             }
         }
     }

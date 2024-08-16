@@ -1,6 +1,5 @@
 package org.linq.core.query;
 
-import java.lang.reflect.code.Block;
 import java.lang.reflect.code.Op;
 import java.lang.reflect.code.TypeElement;
 import java.lang.reflect.code.op.CoreOp;
@@ -21,26 +20,11 @@ abstract class Operand {
         this.transforms = transforms;
     }
 
-    public String getFieldAsString() {
-        return transforms.stream().reduce(plainVal.getValueAsString(), (s, t) -> t.transform(s), (s1, _) -> s1);
-    }
-
     public static Operand of(Op op, Map<java.lang.reflect.code.Value, Object> capturedValues) {
         return switch (rootColumnType(op)) {
             case ClassType classType when classType.toClassName().equals(String.class.getName()) -> new StringOperand(op, capturedValues);
             default -> throw new IllegalArgumentException("Unsupported field type");
         };
-    }
-
-    protected static Op rootOp(Op op) {
-        var currentOp = op;
-        if (currentOp instanceof CoreOp.ConstantOp) {
-            return currentOp;
-        }
-        while (currentOp.operands().getFirst() instanceof Op.Result result && (result.op() instanceof CoreOp.FieldAccessOp || result.op() instanceof CoreOp.InvokeOp)) {
-            currentOp = result.op();
-        }
-        return currentOp;
     }
 
     private static TypeElement rootColumnType(Op op) {
@@ -54,8 +38,34 @@ abstract class Operand {
         }
     }
 
+    protected static Op rootOp(Op op) {
+        var currentOp = op;
+        if (currentOp instanceof CoreOp.ConstantOp) {
+            return currentOp;
+        }
+        while (currentOp.operands().getFirst() instanceof Op.Result result && (result.op() instanceof CoreOp.FieldAccessOp || result.op() instanceof CoreOp.InvokeOp)) {
+            currentOp = result.op();
+        }
+        return currentOp;
+    }
+
+    protected static String accessorToFieldName(String getter) {
+        if (!getter.startsWith("get")) {
+            return getter;
+        }
+        return getter.substring(3, 4).toLowerCase() + getter.substring(4);
+    }
+
+    public String getFieldAsString() {
+        return transforms.stream().reduce(plainVal.getValueAsString(), (s, t) -> t.transform(s), (s1, _) -> s1);
+    }
+
     protected interface Transformer {
         String transform(String fieldName, Object... args);
+    }
+
+    protected sealed interface PlainValue permits ConstantValue, ColumnValue, CapturedValue {
+        String getValueAsString();
     }
 
     protected static class TransformerWithArgs {
@@ -72,13 +82,6 @@ abstract class Operand {
         public String transform(String fieldName) {
             return transformer.transform(fieldName, args);
         }
-    }
-
-    protected static String accessorToFieldName(String getter) {
-        if (!getter.startsWith("get")) {
-            return getter;
-        }
-        return getter.substring(3, 4).toLowerCase() + getter.substring(4);
     }
 
     private static class StringOperand extends Operand {
@@ -114,12 +117,7 @@ abstract class Operand {
                     .skip(1)
                     .map(arg -> {
                         if (arg instanceof Op.Result argResult) {
-                            var argOp = argResult.op();
-                            if (argOp instanceof CoreOp.ConstantOp constantOp) {
-                                return constantOp.value();
-                            } else if (argOp instanceof CoreOp.VarAccessOp varAccessOp) {
-                                return Values.valueOf(varAccessOp, capturedValues);
-                            }
+                            return Values.valueOf(argResult.op(), capturedValues);
                         }
                         throw new IllegalArgumentException("Unsupported parameter type");
                     })
@@ -206,9 +204,10 @@ abstract class Operand {
             SUBSTRING {
                 @Override
                 public String transform(String fieldName, Object... args) {
-                    var start = (int) args[0];
+                    var start = ((int) args[0]);
                     var end = args.length > 1 ? (int) args[1] : Integer.MAX_VALUE;
-                    return "SUBSTR(" + fieldName + ", " + start + ", " + end + ")";
+                    var length = end - start;
+                    return "SUBSTR(" + fieldName + ", " + (start + 1) + ", " + length + ")";
                 }
             },
             CONCAT {
@@ -299,10 +298,6 @@ abstract class Operand {
                 return "'" + value + "'";
             }
         }
-    }
-
-    protected sealed interface PlainValue permits ConstantValue, ColumnValue, CapturedValue {
-        String getValueAsString();
     }
 
     private static sealed class ConstantValue implements PlainValue permits StringOperand.StringConstantValue {
