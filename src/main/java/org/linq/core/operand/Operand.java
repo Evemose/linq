@@ -7,9 +7,9 @@ import java.util.Map;
 public interface Operand {
 
     static Operand of(Op op, Map<Value, Object> capturedValues) {
-        return AbstractOperand.of(op, capturedValues);
+        return TransformNode.of(op, capturedValues);
     }
 
-    String getFieldAsString();
+    String getAsString();
 
 }

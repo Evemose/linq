@@ -4,9 +4,9 @@ class TransformerWithArgs {
 
     private final Transformer transformer;
 
-    private final Object[] args;
+    private final Operand[] args;
 
-    TransformerWithArgs(Transformer transformer, Object... args) {
+    TransformerWithArgs(Transformer transformer, Operand... args) {
         this.transformer = transformer;
         this.args = args;
     }

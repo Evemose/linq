@@ -16,9 +16,9 @@ class StringCondition extends PlainCondition {
 
     @Override
     public String toSqlInner() {
-        var result = sqlOp.sql().replace("$var", field.getFieldAsString());
+        var result = sqlOp.sql().replace("$var", field.getAsString());
         if (sqlOp.sql().contains("$val")) {
-            result = result.replace("$val", sqlOp.postProcessVal(values.getFirst().getFieldAsString()));
+            result = result.replace("$val", sqlOp.postProcessVal(values.getFirst().getAsString()));
         }
         return result;
     }
