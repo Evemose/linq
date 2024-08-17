@@ -37,7 +37,7 @@ class QueryBuilder<T> {
 
         return " WHERE " + conditions.stream().map(Condition::toSql)
             .map(condition -> {
-                var matcher = Pattern.compile("\\$\\w+").matcher(condition);
+                var matcher = Pattern.compile("!\\w+").matcher(condition);
                 while (matcher.find()) {
                     var group = matcher.group();
                     var fieldName = group.substring(1);

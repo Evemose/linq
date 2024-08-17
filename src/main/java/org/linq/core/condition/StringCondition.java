@@ -16,21 +16,22 @@ class StringCondition extends PlainCondition {
 
     @Override
     public String toSqlInner() {
-        var result = sqlOp.sql().replace("$var", field.getAsString());
-        if (sqlOp.sql().contains("$val")) {
-            result = result.replace("$val", sqlOp.postProcessVal(values.getFirst().getAsString()));
+        var result = sqlOp.sql().replace("!var", field.getAsString());
+        if (sqlOp.sql().contains("!val")) {
+            result = result.replace("!val", sqlOp.postProcessVal(values.getFirst().getAsString()));
         }
         return result;
     }
 
     private enum SqlOp {
-        EQUALS("$var = $val"),
-        CONTAINS("$var LIKE %$val%"),
-        STARTS_WITH("$var LIKE $val%"),
-        ENDS_WITH("$var LIKE %$val"),
-        MATCHES("$var SIMILAR TO $val", SqlOp::processRegex),
-        EMPTY("$var = ''"),
-        BLANK("LTRIM($var) = ''");
+        EQUALS("!var = !val"),
+        CONTAINS("!var LIKE !val", value -> "CONCAT('%', " + value + ", '%')"),
+        STARTS_WITH("!var LIKE !val", value -> "CONCAT(" + value + ", '%')"),
+        ENDS_WITH("!var LIKE !val", value -> "CONCAT('%', " + value + ")"),
+        // TODO postprocess regex more precisely
+        MATCHES("!var SIMILAR TO !val", value ->  value.replaceAll("(?<!\\\\)\\.\\*", "%")),
+        EMPTY("!var = ''"),
+        BLANK("LTRIM(!var) = ''");
 
 
         private final String sql;
@@ -57,10 +58,6 @@ class StringCondition extends PlainCondition {
                 case "isEmpty" -> EMPTY;
                 default -> throw new IllegalArgumentException("Unsupported string condition");
             };
-        }
-
-        private static String processRegex(String value) {
-            return value.replaceFirst("(?<!\\\\)\\.\\*", "%");
         }
 
         public String sql() {

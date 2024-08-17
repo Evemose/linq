@@ -8,7 +8,7 @@ public class Main {
         System.out.println(
             new DbStream<>(Dummy.class)
                 .filter(t -> t.name().substring(new Dummy2().getStartIdx(), Dummy2.endIdx()).concat(t.surname()).toUpperCase().matches("[A-E]{1,5}\\d*"))
-                .filter(t -> t.name().equals(t.surname()))
+                .filter(t -> t.name().strip().endsWith("e") || t.surname().stripLeading().startsWith("d"))
                 .filter(t -> !t.name().isBlank())
                 .toList()
         );

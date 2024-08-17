@@ -4,6 +4,6 @@ record ColumnValue(String fieldName) implements PlainValue {
 
     @Override
     public String getValueAsString() {
-        return "$" + fieldName;
+        return "!" + fieldName;
     }
 }

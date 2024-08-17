@@ -1,6 +1,7 @@
 package org.linq.core.condition;
 
 import java.lang.reflect.code.Op;
+import java.lang.reflect.code.Value;
 import java.lang.reflect.code.op.CoreOp;
 import java.lang.reflect.code.op.ExtendedOp;
 import java.lang.reflect.code.type.PrimitiveType;
@@ -9,12 +10,12 @@ import java.util.Map;
 
 public abstract class AbstractCondition implements Condition {
 
-    protected static final ThreadLocal<Map<java.lang.reflect.code.Value, Object>> capturedValues = ThreadLocal.withInitial(Map::of);
+    protected static final ThreadLocal<Map<Value, Object>> capturedValues = ThreadLocal.withInitial(Map::of);
 
     protected AbstractCondition() {
     }
 
-    public static Condition of(CoreOp.LambdaOp lambdaOp, Map<java.lang.reflect.code.Value, Object> capturedValues) {
+    public static Condition of(CoreOp.LambdaOp lambdaOp, Map<Value, Object> capturedValues) {
         if (!lambdaOp.invokableType().returnType().equals(PrimitiveType.BOOLEAN)) {
             throw new IllegalArgumentException("Condition must return boolean");
         }
