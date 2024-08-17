@@ -6,6 +6,7 @@ import java.lang.reflect.code.op.CoreOp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.linq.core.exceptions.UncapturedValueException;
 import org.linq.core.util.Values;
 
 class StringOperand extends AbstractOperand {
@@ -15,16 +16,24 @@ class StringOperand extends AbstractOperand {
     }
 
     private static PlainValue rootVal(Op op, Map<Value, Object> capturedValues) {
-        if (op instanceof CoreOp.ConstantOp constantOp) {
-            return new StringLiteralValue((String) constantOp.value());
-        }
-
         var rootOp = rootOp(op);
 
         return switch (rootOp) {
-            case CoreOp.FieldAccessOp fieldAccessOp -> new ColumnValue(fieldAccessOp.fieldDescriptor().name());
-            case CoreOp.InvokeOp invokeOp -> new ColumnValue(accessorToFieldName(invokeOp.invokeDescriptor().name()));
-            case CoreOp.VarAccessOp varAccessOp -> StringLiteralValue.ofResultOfOp(varAccessOp, capturedValues);
+            case CoreOp.FieldAccessOp fieldAccessOp -> {
+                try {
+                    yield new StringLiteralValue(Values.valueOf(fieldAccessOp, capturedValues));
+                } catch (UncapturedValueException _) {
+                    yield new ColumnValue(fieldAccessOp.fieldDescriptor().name());
+                }
+            }
+            case CoreOp.InvokeOp invokeOp -> {
+                try {
+                    yield new StringLiteralValue(Values.valueOf(invokeOp, capturedValues));
+                } catch (UncapturedValueException _) {
+                    yield new ColumnValue(accessorToFieldName(invokeOp.invokeDescriptor().name()));
+                }
+            }
+            case CoreOp.VarAccessOp varAccessOp -> new StringLiteralValue(Values.valueOf(varAccessOp, capturedValues));
             case CoreOp.ConstantOp constantOp -> new StringLiteralValue((String) constantOp.value());
             default -> throw new IllegalArgumentException("Unsupported field type");
         };

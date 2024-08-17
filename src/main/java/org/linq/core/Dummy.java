@@ -4,6 +4,8 @@ public class Dummy {
 
     public String name;
 
+    public String surname;
+
     @Override
     public String toString() {
         return "Dummy{" +
@@ -17,5 +19,13 @@ public class Dummy {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String surname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
     }
 }

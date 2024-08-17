@@ -7,21 +7,43 @@ import java.lang.reflect.code.Value;
 import java.lang.reflect.code.op.CoreOp;
 import java.lang.reflect.code.type.ClassType;
 import java.util.Map;
+import org.linq.core.exceptions.UncapturedValueException;
 
 public class Values {
 
     private Values() {
     }
 
+    /**
+     * Returns the captured value of the given op.
+     * @param varAccessOp the var access op
+     * @param capturedValues the captured values
+     * @return the value contained in the var
+     * @param <T> the type of the captured value, effectively type of the var value
+     * @throws UncapturedValueException if value of the var is not captured
+     */
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(CoreOp.VarAccessOp varAccessOp, Map<Value, Object> capturedValues) {
         var captured = capturedValues.get(varAccessOp.varOp().result());
+
+        if (captured == null) {
+            throw new UncapturedValueException("Captured value not found for " + varAccessOp.varOp().varName());
+        }
+
         if (captured instanceof CoreOp.Var<?> var) {
             return (T) var.value();
         }
         throw new IllegalArgumentException("Value not found for " + varAccessOp);
     }
 
+    /**
+     * Returns the captured value of the given op.
+     * @param fieldAccessOp the field access op
+     * @param capturedValues the captured values
+     * @return the value contained in the field
+     * @param <T> the type of the captured value, effectively type of the field value
+     * @throws UncapturedValueException if any operand of op or operand of any nested op is not captured
+     */
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(CoreOp.FieldAccessOp fieldAccessOp, Map<Value, Object> capturedValues) {
         try {
@@ -33,6 +55,14 @@ public class Values {
         }
     }
 
+    /**
+     * Returns the captured value of the given op.
+     * @param invokeOp the invoke op
+     * @param capturedValues the captured values
+     * @return the value returned by the method
+     * @param <T> the type of the captured value
+     * @throws UncapturedValueException if any operand of op or operand of any nested op is not captured
+     */
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(CoreOp.InvokeOp invokeOp, Map<Value, Object> capturedValues) {
         try {
@@ -45,15 +75,24 @@ public class Values {
             if (!isStatic) {
                 var owner = Values.valueOf(((Op.Result) invokeOp.operands().getFirst()).op(), capturedValues);
                 methodHandle = methodHandle.bindTo(owner);
-                return (T) methodHandle.invokeWithArguments(params);
-            } else {
-                return (T) methodHandle.invokeWithArguments(params);
             }
-        } catch (Throwable e) {
+            return (T) methodHandle.invokeWithArguments(params);
+        } catch (UncapturedValueException e) {
+            throw e;
+        }
+        catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Returns the captured value of the given op.
+     * @param newOp the new op
+     * @param capturedValues the captured values
+     * @return the value returned by constructor invocation
+     * @param <T> the type of the captured value
+     * @throws UncapturedValueException if any operand of op or operand of any nested op is not captured
+     */
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(CoreOp.NewOp newOp, Map<Value, Object> capturedValues) {
         try {
@@ -79,6 +118,14 @@ public class Values {
         }
     }
 
+    /**
+     * Returns the captured value of the given op.
+     * @param op the op
+     * @param capturedValues the captured values
+     * @return the captured value
+     * @param <T> the type of the captured value
+     * @throws UncapturedValueException if any operand of op or operand of any nested op is not captured
+     */
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(Op op, Map<Value, Object> capturedValues) {
         return switch (op) {
