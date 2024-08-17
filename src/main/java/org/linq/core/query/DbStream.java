@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.linq.core.condition.Condition;
 import org.linq.core.function.QuotableFunction;
 import org.linq.core.function.QuotablePredicate;
 

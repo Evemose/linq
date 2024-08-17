@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.SequencedCollection;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.linq.core.condition.Condition;
 import org.linq.core.path.NameResolver;
 import org.linq.core.path.PlainNameResolver;
 

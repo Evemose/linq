@@ -3,4 +3,5 @@ module core {
     requires org.apache.commons.dbutils;
     requires java.sql;
     exports org.linq.core;
+    exports org.linq.core.function;
 }

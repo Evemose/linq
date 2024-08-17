@@ -4,20 +4,6 @@ import org.linq.core.query.DbStream;
 
 public class Main {
 
-    public static class Dummy2 {
-        public final int startIdx = 1;
-
-        private static final int endIdx = 2;
-
-        public int getStartIdx() {
-            return startIdx;
-        }
-
-        public static int endIdx() {
-            return endIdx;
-        }
-    }
-
     public static void main(String[] args) {
         var startIdx = 1;
         var dummy = new Dummy2();
@@ -27,5 +13,18 @@ public class Main {
                 .filter(t -> !t.name().isBlank())
                 .toList()
         );
+    }
+
+    public static class Dummy2 {
+        private static final int endIdx = 2;
+        public final int startIdx = 1;
+
+        public static int endIdx() {
+            return endIdx;
+        }
+
+        public int getStartIdx() {
+            return startIdx;
+        }
     }
 }
