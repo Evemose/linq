@@ -30,7 +30,10 @@ class StringTransformNode extends TransformNode {
         try {
             return new StringTransformNode(new StringLiteralValue(Values.valueOf(op, capturedValues)));
         } catch (UncapturedValueException _) {
-            return new StringTransformNode(Operand.of(Ops.prevOp(op).orElseThrow(), capturedValues), transformerWithArgs((CoreOp.InvokeOp) op, capturedValues));
+            return new StringTransformNode(
+                Operand.of(Ops.prevOp(op).orElseThrow(), capturedValues),
+                transformerWithArgs((CoreOp.InvokeOp) op, capturedValues)
+            );
         }
     }
 

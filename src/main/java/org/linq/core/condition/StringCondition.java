@@ -1,17 +1,30 @@
 package org.linq.core.condition;
 
+import java.lang.reflect.code.Op;
+import java.lang.reflect.code.Value;
 import java.lang.reflect.code.op.CoreOp;
 import java.lang.reflect.code.type.MethodRef;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import org.linq.core.operand.Operand;
 import org.linq.core.util.Operands;
 
 class StringCondition extends PlainCondition {
 
     private final SqlOp sqlOp;
 
-    StringCondition(CoreOp.InvokeOp invokeOp) {
-        super(invokeOp, Operands.paramsOf(invokeOp, capturedValues.get()));
-        this.sqlOp = SqlOp.ofInvokeDescriptor(invokeOp.invokeDescriptor());
+    StringCondition(Operand field, List<Operand> values, SqlOp sqlOp) {
+        super(field, values);
+        this.sqlOp = sqlOp;
+    }
+
+    static StringCondition newStringCondition(CoreOp.InvokeOp invokeOp, Map<Value, Object> capturedValues) {
+        return new StringCondition(
+            Operand.of(((Op.Result) invokeOp.operands().getFirst()).op(), capturedValues),
+            Operands.paramsOf(invokeOp, capturedValues),
+            SqlOp.ofInvokeDescriptor(invokeOp.invokeDescriptor())
+        );
     }
 
     @Override

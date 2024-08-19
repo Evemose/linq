@@ -3,10 +3,23 @@ package org.linq.core.util;
 import java.lang.reflect.code.Op;
 import java.lang.reflect.code.Value;
 import java.lang.reflect.code.op.CoreOp;
+import java.lang.reflect.code.type.ClassType;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class Ops {
+
+    private static final Set<String> boxedTypesClassNames = Set.of(
+        Integer.class.getName(),
+        Long.class.getName(),
+        Double.class.getName(),
+        Float.class.getName(),
+        Byte.class.getName(),
+        Short.class.getName(),
+        Character.class.getName(),
+        Boolean.class.getName()
+    );
 
     private Ops() {
     }
@@ -55,4 +68,24 @@ public class Ops {
         return prevOp.isEmpty() ||
            prevOp.get() instanceof CoreOp.VarAccessOp varAccessOp && !capturedValues.containsKey(varAccessOp.result());
     }
+
+    public static boolean isBoxedTypeOp(CoreOp.InvokeOp invokeOp) {
+        var refType = invokeOp.invokeDescriptor().refType();
+        return isStatic(invokeOp) && refType instanceof ClassType classType
+            && boxedTypesClassNames.contains(classType.toClassName());
+    }
+
+    public static Op rootOp(Op op) {
+        var currentOp = op;
+        if (currentOp instanceof CoreOp.ConstantOp) {
+            return currentOp;
+        }
+        while (!currentOp.operands().isEmpty()
+            && currentOp.operands().getFirst() instanceof Op.Result result
+            && (result.op() instanceof CoreOp.FieldAccessOp || result.op() instanceof CoreOp.InvokeOp)) {
+            currentOp = result.op();
+        }
+        return currentOp;
+    }
+
 }

@@ -10,5 +10,4 @@ public interface Condition extends QueryPart {
     static Condition of(CoreOp.LambdaOp lambdaOp, Map<Value, Object> capturedValues) {
         return AbstractCondition.of(lambdaOp, capturedValues);
     }
-
 }

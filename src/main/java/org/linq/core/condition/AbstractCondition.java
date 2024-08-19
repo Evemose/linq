@@ -25,7 +25,7 @@ public abstract class AbstractCondition implements Condition {
 
     private static Condition of(Op op) {
         return op instanceof ExtendedOp.JavaConditionalOp conditionalOp ?
-            CompositeCondition.newCompositeOp(conditionalOp) : PlainCondition.newPlainOp(op);
+            CompositeCondition.newCompositeOp(conditionalOp) : PlainCondition.newPlainCondition(op);
     }
 
 }

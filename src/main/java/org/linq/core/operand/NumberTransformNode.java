@@ -10,27 +10,30 @@ import org.linq.core.util.Operands;
 import org.linq.core.util.Ops;
 import org.linq.core.util.Values;
 
-public class IntTransformNode extends TransformNode {
+public class NumberTransformNode extends TransformNode {
 
-    private IntTransformNode(PlainValue plainVal) {
+    private NumberTransformNode(PlainValue plainVal) {
         super(plainVal);
     }
 
-    private IntTransformNode(Operand prevOperand, TransformerWithArgs transform) {
+    private NumberTransformNode(Operand prevOperand, TransformerWithArgs transform) {
         super(prevOperand, transform);
     }
 
-    static IntTransformNode newIntTransformNode(Op op, Map<Value, Object> capturedValues) {
+    static NumberTransformNode newIntTransformNode(Op op, Map<Value, Object> capturedValues) {
         if (Ops.isTerminal(op)) {
-            return new IntTransformNode(new IntLiteralValue(Values.valueOf(op, capturedValues)));
+            return new NumberTransformNode(new IntLiteralValue(Values.valueOf(op, capturedValues)));
         } else if (Ops.isColumnAccessor(op, capturedValues)) {
-            return new IntTransformNode(new ColumnValue(Extracts.accessorToFieldName(op)));
+            return new NumberTransformNode(new ColumnValue(Extracts.accessorToFieldName(op)));
         }
 
         try {
-            return new IntTransformNode(new IntLiteralValue(Values.valueOf(op, capturedValues)));
+            return new NumberTransformNode(new IntLiteralValue(Values.valueOf(op, capturedValues)));
         } catch (UncapturedValueException _) {
-            return new IntTransformNode(Operand.of(Ops.prevOp(op).orElseThrow(), capturedValues), transformerWithArgs((CoreOp.InvokeOp) op, capturedValues));
+            return new NumberTransformNode(
+                Operand.of(Ops.prevOp(op).orElseThrow(), capturedValues),
+                transformerWithArgs((CoreOp.InvokeOp) op, capturedValues)
+            );
         }
     }
 

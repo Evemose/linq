@@ -8,6 +8,7 @@ import java.lang.reflect.code.type.ClassType;
 import java.lang.reflect.code.type.PrimitiveType;
 import java.util.Map;
 import java.util.Objects;
+import org.linq.core.util.Ops;
 
 abstract class TransformNode implements Operand {
 
@@ -30,27 +31,25 @@ abstract class TransformNode implements Operand {
     }
 
     public static Operand of(Op op, Map<Value, Object> capturedValues) {
-        return switch (rootColumnType(op)) {
+        return switch (op.resultType()) {
             case ClassType classType -> {
                 if (classType.toClassName().equals(String.class.getName())) {
                     yield StringTransformNode.newStringTransformNode(op, capturedValues);
-                } else {
-                    throw new IllegalArgumentException("Unsupported field type");
                 }
+                yield ImmediatelyEvaluableTransformNode.newImmediatelyEvaluableTransformNode(op, capturedValues);
             }
             case PrimitiveType primitiveType -> {
                 if (primitiveType == PrimitiveType.INT || primitiveType == PrimitiveType.LONG) {
-                    yield IntTransformNode.newIntTransformNode(op, capturedValues);
-                } else {
-                    throw new IllegalArgumentException("Unsupported field type");
+                    yield NumberTransformNode.newIntTransformNode(op, capturedValues);
                 }
+                yield ImmediatelyEvaluableTransformNode.newImmediatelyEvaluableTransformNode(op, capturedValues);
             }
             default -> throw new IllegalArgumentException("Unsupported field type");
         };
     }
 
     private static TypeElement rootColumnType(Op op) {
-        var rootOp = rootOp(op);
+        var rootOp = Ops.rootOp(op);
         if (rootOp instanceof CoreOp.FieldAccessOp fieldAccessOp) {
             return fieldAccessOp.fieldDescriptor().type();
         } else if (rootOp instanceof CoreOp.InvokeOp invokeOp) {
@@ -60,19 +59,7 @@ abstract class TransformNode implements Operand {
         }
     }
 
-    protected static Op rootOp(Op op) {
-        var currentOp = op;
-        if (currentOp instanceof CoreOp.ConstantOp) {
-            return currentOp;
-        }
-        while (!currentOp.operands().isEmpty()
-            && currentOp.operands().getFirst() instanceof Op.Result result
-            && (result.op() instanceof CoreOp.FieldAccessOp || result.op() instanceof CoreOp.InvokeOp)) {
-            currentOp = result.op();
-        }
-        return currentOp;
-    }
-
+    @Override
     public String getAsString() {
         return prevOperand != null ?
             Objects.requireNonNull(transform).transform(prevOperand.getAsString()) :
