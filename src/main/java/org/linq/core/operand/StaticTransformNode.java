@@ -28,7 +28,7 @@ abstract class StaticTransformNode implements Operand {
                 if (classType.toClassName().equals(Integer.class.getName())) {
                     yield IntegerStaticTransformNode.newIntTransformNode(invokeOp, capturedValues);
                 }
-                yield ImmediatelyEvaluableStaticTransformNode.newEvaluableStaticTransformNode(invokeOp, capturedValues);
+                yield EvaluableStaticTransformNode.newEvaluableStaticTransformNode(invokeOp, capturedValues);
             }
             default -> throw new IllegalArgumentException("Unsupported field type");
         };

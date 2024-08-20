@@ -65,14 +65,8 @@ public class Ops {
 
     public static boolean isColumnAccessor(Op op, Map<Value, Object> capturedValues) {
         var prevOp = prevOp(op);
-        return prevOp.isEmpty() ||
+        return prevOp.isPresent() &&
            prevOp.get() instanceof CoreOp.VarAccessOp varAccessOp && !capturedValues.containsKey(varAccessOp.result());
-    }
-
-    public static boolean isBoxedTypeOp(CoreOp.InvokeOp invokeOp) {
-        var refType = invokeOp.invokeDescriptor().refType();
-        return isStatic(invokeOp) && refType instanceof ClassType classType
-            && boxedTypesClassNames.contains(classType.toClassName());
     }
 
     public static Op rootOp(Op op) {

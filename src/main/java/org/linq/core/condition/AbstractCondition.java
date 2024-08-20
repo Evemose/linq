@@ -15,7 +15,7 @@ public abstract class AbstractCondition implements Condition {
     protected AbstractCondition() {
     }
 
-    public static Condition of(CoreOp.LambdaOp lambdaOp, Map<Value, Object> capturedValues) {
+    public static AbstractCondition of(CoreOp.LambdaOp lambdaOp, Map<Value, Object> capturedValues) {
         if (!lambdaOp.invokableType().returnType().equals(PrimitiveType.BOOLEAN)) {
             throw new IllegalArgumentException("Condition must return boolean");
         }
@@ -23,9 +23,14 @@ public abstract class AbstractCondition implements Condition {
         return AbstractCondition.of(((Op.Result) lambdaOp.body().blocks().getFirst().ops().getLast().operands().getFirst()).op());
     }
 
-    private static Condition of(Op op) {
-        return op instanceof ExtendedOp.JavaConditionalOp conditionalOp ?
-            CompositeCondition.newCompositeOp(conditionalOp) : PlainCondition.newPlainCondition(op);
+    protected static AbstractCondition of(Op op) {
+        return switch (op) {
+            case ExtendedOp.JavaConditionalOp conditionalOp -> CompositeCondition.newCompositeOp(conditionalOp);
+            case CoreOp.GeOp _, CoreOp.GtOp _, CoreOp.LeOp _, CoreOp.LtOp _, CoreOp.EqOp _, CoreOp.NeqOp _ ->
+                Comparison.newComparison(op);
+            case CoreOp.NotOp notOp -> Negation.newNegation(notOp);
+            default -> PlainCondition.newPlainCondition(op);
+        };
     }
 
 }

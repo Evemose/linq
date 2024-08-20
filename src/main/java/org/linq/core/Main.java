@@ -13,7 +13,8 @@ public class Main {
                 ).concat(Integer.valueOf(4).toString()).toUpperCase().matches("[A-E]{1,5}\\d*"))
                 .filter(t -> t.name().strip().endsWith("e") || t.surname().stripLeading().startsWith("d"))
                 .filter(t -> !t.name().isBlank())
-                .filter(t -> Integer.valueOf(Integer.max(4, 5)).equals(5))
+                .filter(t -> Integer.valueOf(Integer.max(4, 5)) > 3)
+                .filter(t -> 2 != 1)
                 .toList()
         );
     }

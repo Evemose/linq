@@ -6,12 +6,10 @@ abstract class CompositeCondition extends AbstractCondition {
 
     protected final Condition left;
     protected final Condition right;
-    protected final Operator operator;
 
-    protected CompositeCondition(Condition left, Condition right, Operator operator) {
+    protected CompositeCondition(Condition left, Condition right) {
         this.left = left;
         this.right = right;
-        this.operator = operator;
     }
 
     static CompositeCondition newCompositeOp(ExtendedOp.JavaConditionalOp op) {
@@ -32,18 +30,13 @@ abstract class CompositeCondition extends AbstractCondition {
         return new LeftRightConditions(PlainCondition.ofSimpleBlock(left), PlainCondition.ofSimpleBlock(right));
     }
 
-    protected enum Operator {
-        AND,
-        OR
-    }
-
     private record LeftRightConditions(Condition left, Condition right) {
     }
 
     private static final class AndCondition extends CompositeCondition {
 
         private AndCondition(Condition left, Condition right) {
-            super(left, right, Operator.AND);
+            super(left, right);
         }
 
         @Override
@@ -55,7 +48,7 @@ abstract class CompositeCondition extends AbstractCondition {
     private static final class OrCondition extends CompositeCondition {
 
         private OrCondition(Condition left, Condition right) {
-            super(left, right, Operator.OR);
+            super(left, right);
         }
 
         @Override

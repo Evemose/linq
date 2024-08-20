@@ -21,20 +21,14 @@ class StringTransformNode extends TransformNode {
     }
 
     static StringTransformNode newStringTransformNode(Op op, Map<Value, Object> capturedValues) {
-        if (Ops.isTerminal(op)) {
-            return new StringTransformNode(new StringLiteralValue(Values.valueOf(op, capturedValues)));
-        } else if (Ops.isColumnAccessor(op, capturedValues)) {
+        if (Ops.isColumnAccessor(op, capturedValues)) {
             return new StringTransformNode(new ColumnValue(Extracts.accessorToFieldName(op)));
         }
 
-        try {
-            return new StringTransformNode(new StringLiteralValue(Values.valueOf(op, capturedValues)));
-        } catch (UncapturedValueException _) {
-            return new StringTransformNode(
-                Operand.of(Ops.prevOp(op).orElseThrow(), capturedValues),
-                transformerWithArgs((CoreOp.InvokeOp) op, capturedValues)
-            );
-        }
+        return new StringTransformNode(
+            Operand.of(Ops.prevOp(op).orElseThrow(), capturedValues),
+            transformerWithArgs((CoreOp.InvokeOp) op, capturedValues)
+        );
     }
 
     private static TransformerWithArgs transformerWithArgs(CoreOp.InvokeOp invokeOp, Map<Value, Object> capturedValues) {
@@ -157,6 +151,52 @@ class StringTransformNode extends TransformNode {
                 var index = args[0].getAsString();
                 return "SUBSTR(" + fieldName + ", " + index + ", 1)";
             }
+        },
+        EQUALS {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                return fieldName + " = " + args[0].getAsString();
+            }
+        },
+        CONTAINS {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                var value = "CONCAT('%', " + args[0].getAsString() + ", '%')";
+                return fieldName + " LIKE " + value;
+            }
+        },
+        STARTS_WITH {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                var value = "CONCAT(" + args[0].getAsString() + ", '%')";
+                return fieldName + " LIKE " + value;
+            }
+        },
+        ENDS_WITH {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                var value = "CONCAT('%', " + args[0].getAsString() + ")";
+                return fieldName + " LIKE " + value;
+            }
+        },
+        MATCHES {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                var value = args[0].getAsString().replaceAll("(?<!\\\\)\\.\\*", "%");
+                return fieldName + " SIMILAR TO " + value;
+            }
+        },
+        EMPTY {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                return fieldName + " = ''";
+            }
+        },
+        BLANK {
+            @Override
+            public String transform(String fieldName, Operand... args) {
+                return "LTRIM(" + fieldName + ") = ''";
+            }
         };
 
         private static StringTransformer of(CoreOp.InvokeOp invokeOp) {
@@ -178,20 +218,16 @@ class StringTransformNode extends TransformNode {
                 case "stripLeading" -> STRIP_LEADING;
                 case "stripIndent" -> STRIP_INDENT;
                 case "charAt" -> CHAR_AT;
-                default -> throw new IllegalArgumentException("Unsupported string transformer");
+                case "equals" -> EQUALS;
+                case "contains" -> CONTAINS;
+                case "startsWith" -> STARTS_WITH;
+                case "endsWith" -> ENDS_WITH;
+                case "matches" -> MATCHES;
+                case "isEmpty" -> EMPTY;
+                case "isBlank" -> BLANK;
+                default -> throw new IllegalArgumentException("Unsupported operation");
             };
         }
     }
 
-    private static final class StringLiteralValue extends LiteralValue<String> {
-
-        private StringLiteralValue(String value) {
-            super(value);
-        }
-
-        @Override
-        public String getValueAsString() {
-            return "'" + value + "'";
-        }
-    }
 }
