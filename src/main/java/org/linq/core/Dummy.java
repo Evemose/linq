@@ -6,10 +6,14 @@ public class Dummy {
 
     public String surname;
 
+    public long num;
+
     @Override
     public String toString() {
         return "Dummy{" +
             "name='" + name + '\'' +
+            ", surname='" + surname + '\'' +
+            ", num=" + num +
             '}';
     }
 

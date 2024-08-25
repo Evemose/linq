@@ -1,6 +1,6 @@
 package org.linq.core.operand;
 
-final class StringLiteralValue extends LiteralValue<String> {
+class StringLiteralValue extends LiteralValue<String> {
 
     public StringLiteralValue(String value) {
         super(value);
@@ -9,5 +9,21 @@ final class StringLiteralValue extends LiteralValue<String> {
     @Override
     public String getValueAsString() {
         return "'" + value + "'";
+    }
+
+    public static StringLiteralValue ofRaw(String value) {
+        return new RawStringLiteralValue(value);
+    }
+
+    private static final class RawStringLiteralValue extends StringLiteralValue {
+
+        public RawStringLiteralValue(String value) {
+            super(value);
+        }
+
+        @Override
+        public String getValueAsString() {
+            return value;
+        }
     }
 }
