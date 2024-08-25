@@ -29,6 +29,9 @@ abstract class StaticTransformNode implements Operand {
                     yield IntegerStaticTransformNode.newIntTransformNode(invokeOp, capturedValues);
                 } else if (classType.toClassName().equals(Long.class.getName())) {
                     yield LongStaticTransformNode.newLongTransformNode(invokeOp, capturedValues);
+                } else if (classType.toClassName().equals(Short.class.getName())
+                    || classType.toClassName().equals(Byte.class.getName())) {
+                    yield ShortByteStaticTransformNode.newShortByteTransformNode(invokeOp, capturedValues);
                 }
                 yield EvaluableStaticTransformNode.newEvaluableStaticTransformNode(invokeOp, capturedValues);
             }

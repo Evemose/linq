@@ -174,7 +174,7 @@ enum NumericStaticTransformer implements StaticTransformer {
     private static String toUnsigned(String s, byte highestBit) {
         var maxValue = (long) Math.pow(2, highestBit) - 1;
         // not sure if this is the correct way to parse unsigned int, but bitwise it's the same
-        return "CASE WHEN %s < 0 THEN (ABS(CAST(%s AS NUMERIC) + %d)) ELSE %s END".formatted(s, s, maxValue, s);
+        return "CASE WHEN %s < 0 THEN (ABS(CAST(%s AS NUMERIC) + %d + 1)) ELSE %s END".formatted(s, s, maxValue, s);
     }
 
     private static String getNumericType(Operand... args) {
